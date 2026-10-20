@@ -4,11 +4,13 @@ import { check, sleep } from 'k6';
 export const BASE_URL = __ENV.BASE_URL || 'http://demo-api:8080';
 
 // Realistic traffic mix: mostly cheap reads, some slow calls, a few failures and CPU work.
+// The db endpoint goes through a small connection pool, so it is the first to saturate under stress.
 const mix = [
-  { weight: 50, path: '/api/fast', name: 'fast' },
-  { weight: 30, path: '/api/slow?ms=120', name: 'slow' },
-  { weight: 12, path: '/api/flaky?rate=0.05', name: 'flaky' },
-  { weight: 8, path: '/api/cpu?iterations=150000', name: 'cpu' },
+  { weight: 40, path: '/api/fast', name: 'fast' },
+  { weight: 20, path: '/api/slow?ms=120', name: 'slow' },
+  { weight: 25, path: '/api/db', name: 'db' },
+  { weight: 8, path: '/api/flaky?rate=0.05', name: 'flaky' },
+  { weight: 7, path: '/api/cpu?iterations=150000', name: 'cpu' },
 ];
 
 const totalWeight = mix.reduce((sum, item) => sum + item.weight, 0);
@@ -33,7 +35,7 @@ export function hitRandomEndpoint() {
   // The flaky endpoint is expected to fail sometimes, so only check it loosely.
   check(response, {
     'status is 2xx or expected 500': (r) =>
-      r.status >= 200 && r.status < 300 || (endpoint.name === 'flaky' && r.status === 500),
+      (r.status >= 200 && r.status < 300) || (endpoint.name === 'flaky' && r.status === 500),
   });
 
   sleep(Math.random() * 0.5);
