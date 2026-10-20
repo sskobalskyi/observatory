@@ -15,10 +15,21 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "min":  0.9,
                                                             "decimals":  2,
-                                                            "unit":  "percentunit",
-                                                            "max":  1
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "red"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  0.99,
+                                                                                                 "color":  "green"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "percentunit"
                                                         },
                                            "overrides":  [
 
@@ -55,7 +66,7 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "min":  0,
+                                                            "decimals":  0,
                                                             "thresholds":  {
                                                                                "steps":  [
                                                                                              {
@@ -73,8 +84,7 @@
                                                                                          ],
                                                                                "mode":  "absolute"
                                                                            },
-                                                            "unit":  "percentunit",
-                                                            "max":  1
+                                                            "unit":  "percentunit"
                                                         },
                                            "overrides":  [
 
@@ -91,7 +101,7 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Availability error budget remaining (99% SLO)",
+                       "title":  "Availability error budget remaining, selected range (99% SLO)",
                        "targets":  [
                                        {
                                            "legendFormat":  "budget",
@@ -103,7 +113,7 @@
                                            "refId":  "A"
                                        }
                                    ],
-                       "type":  "gauge",
+                       "type":  "stat",
                        "options":  {
 
                                    }
@@ -111,10 +121,21 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "min":  0.5,
                                                             "decimals":  2,
-                                                            "unit":  "percentunit",
-                                                            "max":  1
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "red"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  0.95,
+                                                                                                 "color":  "green"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           },
+                                                            "unit":  "percentunit"
                                                         },
                                            "overrides":  [
 
@@ -151,7 +172,7 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "min":  0,
+                                                            "decimals":  0,
                                                             "thresholds":  {
                                                                                "steps":  [
                                                                                              {
@@ -169,8 +190,7 @@
                                                                                          ],
                                                                                "mode":  "absolute"
                                                                            },
-                                                            "unit":  "percentunit",
-                                                            "max":  1
+                                                            "unit":  "percentunit"
                                                         },
                                            "overrides":  [
 
@@ -187,7 +207,7 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Latency error budget remaining (95% SLO)",
+                       "title":  "Latency error budget remaining, selected range (95% SLO)",
                        "targets":  [
                                        {
                                            "legendFormat":  "budget",
@@ -199,7 +219,7 @@
                                            "refId":  "A"
                                        }
                                    ],
-                       "type":  "gauge",
+                       "type":  "stat",
                        "options":  {
 
                                    }

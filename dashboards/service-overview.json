@@ -238,7 +238,7 @@
                        "title":  "Process CPU (cores)",
                        "targets":  [
                                        {
-                                           "legendFormat":  "{{dotnet_cpu_state}}",
+                                           "legendFormat":  "{{cpu_mode}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
@@ -312,12 +312,12 @@
                        "title":  "GC collections / s by generation",
                        "targets":  [
                                        {
-                                           "legendFormat":  "gen {{dotnet_gc_heap_generation}}",
+                                           "legendFormat":  "gen {{gc_heap_generation}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "sum by (dotnet_gc_heap_generation) (rate(dotnet_gc_collections_total{service_name=\"demo-api\"}[1m]))",
+                                           "expr":  "sum by (gc_heap_generation) (rate(dotnet_gc_collections_total{service_name=\"demo-api\"}[1m]))",
                                            "refId":  "A"
                                        }
                                    ],
@@ -494,14 +494,14 @@
                                           "type":  "loki",
                                           "uid":  "loki"
                                       },
-                       "title":  "Application logs (errors and warnings highlighted)",
+                       "title":  "Application warnings and errors",
                        "targets":  [
                                        {
                                            "datasource":  {
                                                               "type":  "loki",
                                                               "uid":  "loki"
                                                           },
-                                           "expr":  "{service_name=\"demo-api\"} | detected_level=~\"info|warn|error\"",
+                                           "expr":  "{service_name=\"demo-api\"} | detected_level=~\"warn|error\"",
                                            "refId":  "A"
                                        }
                                    ],
