@@ -1,0 +1,497 @@
+{
+    "schemaVersion":  39,
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "refresh":  2,
+                                        "allValue":  ".*",
+                                        "type":  "query",
+                                        "includeAll":  true,
+                                        "label":  "Test",
+                                        "datasource":  {
+                                                           "type":  "prometheus",
+                                                           "uid":  "prometheus"
+                                                       },
+                                        "name":  "testid",
+                                        "multi":  false,
+                                        "query":  {
+                                                      "refId":  "q",
+                                                      "query":  "label_values(k6_vus, testid)"
+                                                  },
+                                        "current":  {
+                                                        "text":  "All",
+                                                        "value":  "$__all"
+                                                    }
+                                    }
+                                ]
+                   },
+    "annotations":  {
+                        "list":  [
+
+                                 ]
+                    },
+    "version":  1,
+    "panels":  [
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  12,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Current virtual users",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "VUs",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "max(k6_vus{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "stat",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "reqps"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  13,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  6
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Requests / s",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "req/s",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(rate(k6_http_reqs_total{testid=~\"$testid\"}[30s]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "stat",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "percentunit",
+                                                            "thresholds":  {
+                                                                               "steps":  [
+                                                                                             {
+                                                                                                 "value":  null,
+                                                                                                 "color":  "green"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  0.05,
+                                                                                                 "color":  "orange"
+                                                                                             },
+                                                                                             {
+                                                                                                 "value":  0.1,
+                                                                                                 "color":  "red"
+                                                                                             }
+                                                                                         ],
+                                                                               "mode":  "absolute"
+                                                                           }
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  14,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Failed requests",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "failed",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "max(k6_http_req_failed_rate{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "stat",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  15,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  6,
+                                       "h":  4,
+                                       "x":  18
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Total requests",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "total",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(max by (testid) (k6_http_reqs_total{testid=~\"$testid\"}))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "stat",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  16,
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Virtual users vs request rate",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "VUs",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "max(k6_vus{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "legendFormat":  "req/s",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(rate(k6_http_reqs_total{testid=~\"$testid\"}[30s]))",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ms"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  17,
+                       "gridPos":  {
+                                       "y":  4,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Client-side response time (k6)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "p50",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_duration_p50{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "legendFormat":  "p95",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_duration_p95{testid=~\"$testid\"})",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "legendFormat":  "p99",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_duration_p99{testid=~\"$testid\"})",
+                                           "refId":  "C"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ms"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  18,
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Client p95 (k6) vs server p95 (OpenTelemetry)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "client p95 (k6)",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_duration_p95{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "legendFormat":  "server p95 (app)",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"demo-api\"}[30s]))) * 1000",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  19,
+                       "gridPos":  {
+                                       "y":  12,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Server CPU during test (cores)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "CPU cores",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(rate(dotnet_process_cpu_time_seconds_total{service_name=\"demo-api\"}[30s]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ms"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  20,
+                       "gridPos":  {
+                                       "y":  20,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Time spent waiting vs connecting vs receiving (k6, avg)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "waiting (TTFB)",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_waiting_avg{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "legendFormat":  "connecting",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_connecting_avg{testid=~\"$testid\"})",
+                                           "refId":  "B"
+                                       },
+                                       {
+                                           "legendFormat":  "receiving",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_http_req_receiving_avg{testid=~\"$testid\"})",
+                                           "refId":  "C"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ms"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  21,
+                       "gridPos":  {
+                                       "y":  20,
+                                       "w":  12,
+                                       "h":  8,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Iteration duration (k6)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "p95",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_iteration_duration_p95{testid=~\"$testid\"})",
+                                           "refId":  "A"
+                                       },
+                                       {
+                                           "legendFormat":  "avg",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "avg(k6_iteration_duration_avg{testid=~\"$testid\"})",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   }
+               ],
+    "tags":  [
+                 "observatory",
+                 "k6"
+             ],
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-30m"
+             },
+    "refresh":  "5s",
+    "title":  "k6 load test",
+    "uid":  "k6-load-test"
+}
