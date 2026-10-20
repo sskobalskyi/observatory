@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose file
+        run: docker compose --profile loadtest config --quiet
+
+      - name: Validate dashboard JSON
+        run: |
+          for f in dashboards/*.json; do
+            jq empty "$f"
+            echo "ok: $f"
+          done
+
+      - name: Validate Prometheus configuration and rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/config/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.1.0 check config /etc/prometheus/prometheus.yml
+
+  build:
+    name: Build demo API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet build src/DemoApi/DemoApi.csproj --configuration Release
+
+  k6-smoke:
+    name: k6 smoke test gate
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start the stack
+        run: docker compose up -d --build
+
+      - name: Wait for the demo API
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:18080/health > /dev/null; then
+              echo "demo-api is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "demo-api did not become healthy" >&2
+          exit 1
+
+      - name: Run k6 smoke test
+        run: docker compose --profile loadtest run --rm k6 run /scripts/smoke.js
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 100
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose --profile loadtest down -v

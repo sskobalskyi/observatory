@@ -101,6 +101,37 @@ services:
       - loki
       - pyroscope
 
+  # Sample application used as the target for dashboards and load tests.
+  demo-api:
+    <<: *restart
+    build: ./src/DemoApi
+    environment:
+      OTEL_SERVICE_NAME: demo-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRIC_EXPORT_INTERVAL: "5000"
+    ports:
+      - "18080:8080"
+    depends_on:
+      - otel-collector
+
+  # Load generator. Run on demand:
+  #   docker compose --profile loadtest run --rm k6 run /scripts/load.js
+  k6:
+    profiles: ["loadtest"]
+    image: grafana/k6:0.57.0
+    environment:
+      BASE_URL: http://demo-api:8080
+      K6_OUT: experimental-prometheus-rw
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_STATS: p(50),p(90),p(95),p(99),min,max,avg
+      K6_PROMETHEUS_RW_PUSH_INTERVAL: 5s
+    volumes:
+      - ./k6:/scripts:ro
+    depends_on:
+      - demo-api
+      - prometheus
+
 volumes:
   prometheus-data:
   tempo-data:

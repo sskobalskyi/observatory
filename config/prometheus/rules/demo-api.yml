@@ -1,0 +1,31 @@
+groups:
+  - name: demo-api-slo
+    rules:
+      # Recording rules keep dashboards and alerts cheap and consistent.
+      - record: demo_api:http_requests:rate1m
+        expr: sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[1m]))
+      - record: demo_api:http_errors:ratio_rate1m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{service_name="demo-api",http_response_status_code=~"5.."}[1m]))
+          /
+          sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[1m]))
+      - record: demo_api:http_request_duration_seconds:p95_rate1m
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name="demo-api"}[1m])))
+
+      - alert: DemoApiHighErrorRatio
+        expr: demo_api:http_errors:ratio_rate1m > 0.10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "demo-api 5xx ratio is above 10%"
+          description: "Current error ratio: {{ $value | humanizePercentage }}"
+
+      - alert: DemoApiHighLatencyP95
+        expr: demo_api:http_request_duration_seconds:p95_rate1m > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "demo-api p95 latency is above 500 ms"
+          description: "Current p95: {{ $value | humanizeDuration }}"
