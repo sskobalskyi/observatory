@@ -80,10 +80,17 @@ services:
     ports:
       - "9093:9093"
 
+  # Renders dashboard panels to PNG (used for README screenshots and reviewing dashboards headlessly).
+  renderer:
+    <<: *restart
+    image: grafana/grafana-image-renderer:3.12.1
+
   grafana:
     <<: *restart
     image: grafana/grafana:11.5.1
     environment:
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_AUTH_ANONYMOUS_ENABLED: "true"
