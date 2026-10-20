@@ -1,0 +1,108 @@
+# Service level objectives for demo-api.
+#
+#   Availability SLO: 99% of requests do not return 5xx   (error budget 1%)
+#   Latency SLO:      95% of requests complete in < 500 ms (error budget 5%)
+#
+# Burn rate = observed bad-event ratio / error budget. A burn rate of 1 consumes exactly the
+# budget over the SLO period; 14.4 would exhaust a 30-day budget in about two days.
+#
+# Alerts use the multiwindow, multi-burn-rate pattern from the Google SRE Workbook: a long window
+# proves the problem is real, a short window proves it is still happening (so alerts also clear fast).
+# Windows are scaled down from the canonical 1h/5m and 6h/30m pairs to 5m/1m and 30m/5m so the
+# alerts can be demonstrated within a few minutes of a local load test.
+groups:
+  - name: demo-api-sli
+    interval: 15s
+    rules:
+      - record: slo:demo_api_error_ratio:rate1m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{service_name="demo-api",http_response_status_code=~"5.."}[1m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[1m]))
+      - record: slo:demo_api_error_ratio:rate5m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{service_name="demo-api",http_response_status_code=~"5.."}[5m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[5m]))
+      - record: slo:demo_api_error_ratio:rate30m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{service_name="demo-api",http_response_status_code=~"5.."}[30m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[30m]))
+
+      - record: slo:demo_api_slow_ratio:rate1m
+        expr: |
+          1 - (sum(rate(http_server_request_duration_seconds_bucket{service_name="demo-api",le="0.5"}[1m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[1m])))
+      - record: slo:demo_api_slow_ratio:rate5m
+        expr: |
+          1 - (sum(rate(http_server_request_duration_seconds_bucket{service_name="demo-api",le="0.5"}[5m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[5m])))
+      - record: slo:demo_api_slow_ratio:rate30m
+        expr: |
+          1 - (sum(rate(http_server_request_duration_seconds_bucket{service_name="demo-api",le="0.5"}[30m]))
+          / sum(rate(http_server_request_duration_seconds_count{service_name="demo-api"}[30m])))
+
+  - name: demo-api-burn-rate
+    interval: 15s
+    rules:
+      - record: slo:demo_api_availability_burn_rate:rate1m
+        expr: slo:demo_api_error_ratio:rate1m / 0.01
+      - record: slo:demo_api_availability_burn_rate:rate5m
+        expr: slo:demo_api_error_ratio:rate5m / 0.01
+      - record: slo:demo_api_availability_burn_rate:rate30m
+        expr: slo:demo_api_error_ratio:rate30m / 0.01
+      - record: slo:demo_api_latency_burn_rate:rate1m
+        expr: slo:demo_api_slow_ratio:rate1m / 0.05
+      - record: slo:demo_api_latency_burn_rate:rate5m
+        expr: slo:demo_api_slow_ratio:rate5m / 0.05
+      - record: slo:demo_api_latency_burn_rate:rate30m
+        expr: slo:demo_api_slow_ratio:rate30m / 0.05
+
+  - name: demo-api-slo-alerts
+    interval: 15s
+    rules:
+      - alert: DemoApiAvailabilityFastBurn
+        expr: |
+          slo:demo_api_availability_burn_rate:rate5m > 14.4
+          and slo:demo_api_availability_burn_rate:rate1m > 14.4
+        for: 30s
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "demo-api is burning its availability error budget 14x too fast"
+          description: "5m burn rate {{ $value | printf \"%.1f\" }}. At this pace a 30-day budget is gone in about two days."
+
+      - alert: DemoApiAvailabilitySlowBurn
+        expr: |
+          slo:demo_api_availability_burn_rate:rate30m > 6
+          and slo:demo_api_availability_burn_rate:rate5m > 6
+        for: 1m
+        labels:
+          severity: warning
+          slo: availability
+        annotations:
+          summary: "demo-api is steadily burning its availability error budget"
+          description: "30m burn rate {{ $value | printf \"%.1f\" }}."
+
+      - alert: DemoApiLatencyFastBurn
+        expr: |
+          slo:demo_api_latency_burn_rate:rate5m > 14.4
+          and slo:demo_api_latency_burn_rate:rate1m > 14.4
+        for: 30s
+        labels:
+          severity: critical
+          slo: latency
+        annotations:
+          summary: "demo-api is burning its latency error budget 14x too fast"
+          description: "5m burn rate {{ $value | printf \"%.1f\" }}. Most requests are slower than 500 ms."
+
+      - alert: DemoApiLatencySlowBurn
+        expr: |
+          slo:demo_api_latency_burn_rate:rate30m > 6
+          and slo:demo_api_latency_burn_rate:rate5m > 6
+        for: 1m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "demo-api is steadily burning its latency error budget"
+          description: "30m burn rate {{ $value | printf \"%.1f\" }}."
