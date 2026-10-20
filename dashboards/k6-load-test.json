@@ -35,13 +35,17 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "short"
+                                                            "unit":  "short",
+                                                            "color":  {
+                                                                          "fixedColor":  "blue",
+                                                                          "mode":  "fixed"
+                                                                      }
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  12,
+                       "id":  14,
                        "gridPos":  {
                                        "y":  0,
                                        "w":  6,
@@ -72,13 +76,17 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "reqps"
+                                                            "unit":  "reqps",
+                                                            "color":  {
+                                                                          "fixedColor":  "blue",
+                                                                          "mode":  "fixed"
+                                                                      }
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  13,
+                       "id":  15,
                        "gridPos":  {
                                        "y":  0,
                                        "w":  6,
@@ -109,7 +117,7 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "percentunit",
+                                                            "decimals":  1,
                                                             "thresholds":  {
                                                                                "steps":  [
                                                                                              {
@@ -117,22 +125,23 @@
                                                                                                  "color":  "green"
                                                                                              },
                                                                                              {
-                                                                                                 "value":  0.05,
+                                                                                                 "value":  0.01,
                                                                                                  "color":  "orange"
                                                                                              },
                                                                                              {
-                                                                                                 "value":  0.1,
+                                                                                                 "value":  0.05,
                                                                                                  "color":  "red"
                                                                                              }
                                                                                          ],
                                                                                "mode":  "absolute"
-                                                                           }
+                                                                           },
+                                                            "unit":  "percentunit"
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  14,
+                       "id":  16,
                        "gridPos":  {
                                        "y":  0,
                                        "w":  6,
@@ -143,7 +152,7 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Failed requests",
+                       "title":  "Failed requests (share of all requests)",
                        "targets":  [
                                        {
                                            "legendFormat":  "failed",
@@ -151,7 +160,7 @@
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "max(k6_http_req_failed_rate{testid=~\"$testid\"})",
+                                           "expr":  "sum(k6_http_reqs_total{testid=~\"$testid\",expected_response=\"false\"}) / sum(k6_http_reqs_total{testid=~\"$testid\"})",
                                            "refId":  "A"
                                        }
                                    ],
@@ -163,13 +172,17 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "short"
+                                                            "unit":  "short",
+                                                            "color":  {
+                                                                          "fixedColor":  "blue",
+                                                                          "mode":  "fixed"
+                                                                      }
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  15,
+                       "id":  17,
                        "gridPos":  {
                                        "y":  0,
                                        "w":  6,
@@ -188,7 +201,7 @@
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "sum(max by (testid) (k6_http_reqs_total{testid=~\"$testid\"}))",
+                                           "expr":  "sum(k6_http_reqs_total{testid=~\"$testid\"})",
                                            "refId":  "A"
                                        }
                                    ],
@@ -206,7 +219,7 @@
 
                                                          ]
                                        },
-                       "id":  16,
+                       "id":  18,
                        "gridPos":  {
                                        "y":  4,
                                        "w":  12,
@@ -246,13 +259,13 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "ms"
+                                                            "unit":  "s"
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  17,
+                       "id":  19,
                        "gridPos":  {
                                        "y":  4,
                                        "w":  12,
@@ -263,34 +276,16 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Client-side response time (k6)",
+                       "title":  "Client-side p95 by endpoint (k6)",
                        "targets":  [
                                        {
-                                           "legendFormat":  "p50",
+                                           "legendFormat":  "{{endpoint}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "avg(k6_http_req_duration_p50{testid=~\"$testid\"})",
+                                           "expr":  "max by (endpoint) (k6_http_req_duration_p95{testid=~\"$testid\",expected_response=\"true\"})",
                                            "refId":  "A"
-                                       },
-                                       {
-                                           "legendFormat":  "p95",
-                                           "datasource":  {
-                                                              "type":  "prometheus",
-                                                              "uid":  "prometheus"
-                                                          },
-                                           "expr":  "avg(k6_http_req_duration_p95{testid=~\"$testid\"})",
-                                           "refId":  "B"
-                                       },
-                                       {
-                                           "legendFormat":  "p99",
-                                           "datasource":  {
-                                                              "type":  "prometheus",
-                                                              "uid":  "prometheus"
-                                                          },
-                                           "expr":  "avg(k6_http_req_duration_p99{testid=~\"$testid\"})",
-                                           "refId":  "C"
                                        }
                                    ],
                        "type":  "timeseries",
@@ -301,13 +296,13 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "ms"
+                                                            "unit":  "s"
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  18,
+                       "id":  20,
                        "gridPos":  {
                                        "y":  12,
                                        "w":  12,
@@ -318,7 +313,7 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Client p95 (k6) vs server p95 (OpenTelemetry)",
+                       "title":  "Client vs server p95 for /api/db",
                        "targets":  [
                                        {
                                            "legendFormat":  "client p95 (k6)",
@@ -326,16 +321,16 @@
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "avg(k6_http_req_duration_p95{testid=~\"$testid\"})",
+                                           "expr":  "max(k6_http_req_duration_p95{testid=~\"$testid\",endpoint=\"db\",expected_response=\"true\"})",
                                            "refId":  "A"
                                        },
                                        {
-                                           "legendFormat":  "server p95 (app)",
+                                           "legendFormat":  "server p95 (OpenTelemetry)",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"demo-api\"}[30s]))) * 1000",
+                                           "expr":  "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"demo-api\",http_route=\"/api/db\"}[30s])))",
                                            "refId":  "B"
                                        }
                                    ],
@@ -353,7 +348,7 @@
 
                                                          ]
                                        },
-                       "id":  19,
+                       "id":  21,
                        "gridPos":  {
                                        "y":  12,
                                        "w":  12,
@@ -384,13 +379,13 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "ms"
+                                                            "unit":  "s"
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  20,
+                       "id":  22,
                        "gridPos":  {
                                        "y":  20,
                                        "w":  12,
@@ -401,34 +396,16 @@
                                           "type":  "prometheus",
                                           "uid":  "prometheus"
                                       },
-                       "title":  "Time spent waiting vs connecting vs receiving (k6, avg)",
+                       "title":  "Client-side average response time by endpoint (k6)",
                        "targets":  [
                                        {
-                                           "legendFormat":  "waiting (TTFB)",
+                                           "legendFormat":  "{{endpoint}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "avg(k6_http_req_waiting_avg{testid=~\"$testid\"})",
+                                           "expr":  "max by (endpoint) (k6_http_req_duration_avg{testid=~\"$testid\",expected_response=\"true\"})",
                                            "refId":  "A"
-                                       },
-                                       {
-                                           "legendFormat":  "connecting",
-                                           "datasource":  {
-                                                              "type":  "prometheus",
-                                                              "uid":  "prometheus"
-                                                          },
-                                           "expr":  "avg(k6_http_req_connecting_avg{testid=~\"$testid\"})",
-                                           "refId":  "B"
-                                       },
-                                       {
-                                           "legendFormat":  "receiving",
-                                           "datasource":  {
-                                                              "type":  "prometheus",
-                                                              "uid":  "prometheus"
-                                                          },
-                                           "expr":  "avg(k6_http_req_receiving_avg{testid=~\"$testid\"})",
-                                           "refId":  "C"
                                        }
                                    ],
                        "type":  "timeseries",
@@ -439,13 +416,13 @@
                    {
                        "fieldConfig":  {
                                            "defaults":  {
-                                                            "unit":  "ms"
+                                                            "unit":  "s"
                                                         },
                                            "overrides":  [
 
                                                          ]
                                        },
-                       "id":  21,
+                       "id":  23,
                        "gridPos":  {
                                        "y":  20,
                                        "w":  12,
@@ -464,7 +441,7 @@
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "avg(k6_iteration_duration_p95{testid=~\"$testid\"})",
+                                           "expr":  "max(k6_iteration_duration_p95{testid=~\"$testid\"})",
                                            "refId":  "A"
                                        },
                                        {
@@ -473,7 +450,7 @@
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "avg(k6_iteration_duration_avg{testid=~\"$testid\"})",
+                                           "expr":  "max(k6_iteration_duration_avg{testid=~\"$testid\"})",
                                            "refId":  "B"
                                        }
                                    ],

@@ -238,7 +238,7 @@
                        "title":  "Process CPU (cores)",
                        "targets":  [
                                        {
-                                           "legendFormat":  "{{dotnet_cpu_state}}",
+                                           "legendFormat":  "{{cpu_mode}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
@@ -312,12 +312,12 @@
                        "title":  "GC collections / s by generation",
                        "targets":  [
                                        {
-                                           "legendFormat":  "gen {{dotnet_gc_heap_generation}}",
+                                           "legendFormat":  "gen {{gc_heap_generation}}",
                                            "datasource":  {
                                                               "type":  "prometheus",
                                                               "uid":  "prometheus"
                                                           },
-                                           "expr":  "sum by (dotnet_gc_heap_generation) (rate(dotnet_gc_collections_total{service_name=\"demo-api\"}[1m]))",
+                                           "expr":  "sum by (gc_heap_generation) (rate(dotnet_gc_collections_total{service_name=\"demo-api\"}[1m]))",
                                            "refId":  "A"
                                        }
                                    ],
@@ -412,6 +412,80 @@
                        "id":  11,
                        "gridPos":  {
                                        "y":  30,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Database pool: connections in use (max 3)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "in use",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "max(demo_db_pool_in_use{service_name=\"demo-api\"})",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ops"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  12,
+                       "gridPos":  {
+                                       "y":  30,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Database pool: timeouts / s (HTTP 503)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "timeouts",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(rate(demo_db_pool_timeouts_total{service_name=\"demo-api\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  13,
+                       "gridPos":  {
+                                       "y":  37,
                                        "w":  24,
                                        "h":  9,
                                        "x":  0
@@ -420,14 +494,14 @@
                                           "type":  "loki",
                                           "uid":  "loki"
                                       },
-                       "title":  "Application logs (errors and warnings highlighted)",
+                       "title":  "Application warnings and errors",
                        "targets":  [
                                        {
                                            "datasource":  {
                                                               "type":  "loki",
                                                               "uid":  "loki"
                                                           },
-                                           "expr":  "{service_name=\"demo-api\"} | detected_level=~\"info|warn|error\"",
+                                           "expr":  "{service_name=\"demo-api\"} | detected_level=~\"warn|error\"",
                                            "refId":  "A"
                                        }
                                    ],

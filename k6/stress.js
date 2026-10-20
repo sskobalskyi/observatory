@@ -7,7 +7,7 @@ export const options = {
     { duration: '1m', target: 75 },
     { duration: '1m', target: 150 },
     { duration: '1m', target: 250 },
-    { duration: '1m', target: 400 },
+    { duration: '3m', target: 400 },
     { duration: '1m', target: 0 },
   ],
   // Loose thresholds: the point is to observe degradation, not to fail fast.

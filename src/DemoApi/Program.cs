@@ -63,6 +63,29 @@ app.MapGet("/api/flaky", (double? rate, ILogger<Program> logger) =>
     return Results.Ok(new { message = "ok" });
 });
 
+// Simulates a database call through a small connection pool. Under heavy load callers queue
+// for a connection (latency climbs) and eventually give up with HTTP 503 (saturation).
+app.MapGet("/api/db", async (ILogger<Program> logger) =>
+{
+    using var activity = DemoTelemetry.Source.StartActivity("db-query");
+    if (!await DemoTelemetry.DbPool.WaitAsync(TimeSpan.FromMilliseconds(800)))
+    {
+        DemoTelemetry.PoolTimeouts.Add(1);
+        logger.LogWarning("Connection pool exhausted, giving up after 800 ms");
+        return Results.Problem("Connection pool exhausted", statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    try
+    {
+        await Task.Delay(25);
+        return Results.Ok(new { rows = 1 });
+    }
+    finally
+    {
+        DemoTelemetry.DbPool.Release();
+    }
+});
+
 // Burns CPU so saturation shows up in runtime metrics and profiles.
 app.MapGet("/api/cpu", (int? iterations) =>
 {
@@ -87,8 +110,21 @@ internal static class DemoTelemetry
 
     public static readonly ActivitySource Source = new(ActivitySourceName);
     private static readonly Meter Meter = new(MeterName);
+    public const int DbPoolSize = 3;
+
+    public static readonly SemaphoreSlim DbPool = new(DbPoolSize, DbPoolSize);
     public static readonly Counter<long> Failures = Meter.CreateCounter<long>(
         "demo.simulated_failures", description: "Number of simulated failures returned by /api/flaky");
+    public static readonly Counter<long> PoolTimeouts = Meter.CreateCounter<long>(
+        "demo.db_pool.timeouts", description: "Requests that gave up waiting for a database connection");
+
+    static DemoTelemetry()
+    {
+        Meter.CreateObservableGauge(
+            "demo.db_pool.in_use",
+            () => DbPoolSize - DbPool.CurrentCount,
+            description: "Database connections currently in use");
+    }
 
     // Box-Muller transform: standard normal sample.
     public static double NextGaussian()
