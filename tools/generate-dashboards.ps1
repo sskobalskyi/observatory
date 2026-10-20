@@ -48,7 +48,9 @@ $ov = @(
   (Panel 'timeseries' 'GC collections / s by generation' 0 23 8 7 @(Target 'sum by (dotnet_gc_heap_generation) (rate(dotnet_gc_collections_total{service_name="demo-api"}[1m]))' 'gen {{dotnet_gc_heap_generation}}') 'ops'),
   (Panel 'timeseries' 'Thread pool queue length' 8 23 8 7 @(Target 'dotnet_thread_pool_queue_length_total{service_name="demo-api"}' 'queue') 'short'),
   (Panel 'timeseries' 'Simulated failures / s' 16 23 8 7 @(Target 'sum(rate(demo_simulated_failures_total{service_name="demo-api"}[1m]))' 'failures') 'ops'),
-  (Panel 'logs' 'Application logs (errors and warnings highlighted)' 0 30 24 9 @(@{ datasource = $loki; expr = '{service_name="demo-api"} | detected_level=~"info|warn|error"'; refId = 'A' }) 'short' @{ datasource = $loki; options = @{ showTime = $true; wrapLogMessage = $true; sortOrder = 'Descending'; enableLogDetails = $true } })
+  (Panel 'timeseries' 'Database pool: connections in use (max 3)' 0 30 12 7 @(Target 'max(demo_db_pool_in_use{service_name="demo-api"})' 'in use') 'short'),
+  (Panel 'timeseries' 'Database pool: timeouts / s (HTTP 503)' 12 30 12 7 @(Target 'sum(rate(demo_db_pool_timeouts_total{service_name="demo-api"}[1m]))' 'timeouts') 'ops'),
+  (Panel 'logs' 'Application logs (errors and warnings highlighted)' 0 37 24 9 @(@{ datasource = $loki; expr = '{service_name="demo-api"} | detected_level=~"info|warn|error"'; refId = 'A' }) 'short' @{ datasource = $loki; options = @{ showTime = $true; wrapLogMessage = $true; sortOrder = 'Descending'; enableLogDetails = $true } })
 )
 Save (Dashboard 'demo-api-overview' 'Service overview: demo-api' @('observatory','red') $ov @()) 'dashboards/service-overview.json'
 
@@ -80,4 +82,33 @@ $k6 = @(
 )
 $tpl = @(@{ name = 'testid'; label = 'Test'; type = 'query'; datasource = $prom; query = @{ query = 'label_values(k6_vus, testid)'; refId = 'q' }; refresh = 2; includeAll = $true; allValue = '.*'; current = @{ text = 'All'; value = '$__all' }; multi = $false })
 Save (Dashboard 'k6-load-test' 'k6 load test' @('observatory','k6') $k6 $tpl '5s' 'now-30m') 'dashboards/k6-load-test.json'
+# ---------- SLO and burn rate ----------
+$script:id = 0
+$budgetAvail = 'sum(increase(http_server_request_duration_seconds_count{service_name="demo-api",http_response_status_code=~"5.."}[$__range])) / sum(increase(http_server_request_duration_seconds_count{service_name="demo-api"}[$__range]))'
+$budgetLatency = '1 - (sum(increase(http_server_request_duration_seconds_bucket{service_name="demo-api",le="0.5"}[$__range])) / sum(increase(http_server_request_duration_seconds_count{service_name="demo-api"}[$__range])))'
+$budgetSteps = @{ mode = 'absolute'; steps = @(@{ color = 'red'; value = $null }, @{ color = 'orange'; value = 0.25 }, @{ color = 'green'; value = 0.5 }) }
+$burnSteps = @{ mode = 'absolute'; steps = @(@{ color = 'green'; value = $null }, @{ color = 'orange'; value = 6 }, @{ color = 'red'; value = 14.4 }) }
+$burnOpts = @{ fieldConfig = @{ defaults = @{ unit = 'short'; custom = @{ thresholdsStyle = @{ mode = 'dashed' } }; thresholds = $burnSteps }; overrides = @() } }
+$slo = @(
+  (Panel 'stat' 'Availability SLI (selected range)' 0 0 6 5 @(Target "1 - ($budgetAvail)" 'availability') 'percentunit' @{ fieldConfig = @{ defaults = @{ unit = 'percentunit'; decimals = 2; min = 0.9; max = 1 }; overrides = @() } }),
+  (Panel 'gauge' 'Availability error budget remaining (99% SLO)' 6 0 6 5 @(Target "1 - (($budgetAvail) / 0.01)" 'budget') 'percentunit' @{ fieldConfig = @{ defaults = @{ unit = 'percentunit'; min = 0; max = 1; thresholds = $budgetSteps }; overrides = @() } }),
+  (Panel 'stat' 'Latency SLI: requests under 500 ms (selected range)' 12 0 6 5 @(Target "1 - ($budgetLatency)" 'fast enough') 'percentunit' @{ fieldConfig = @{ defaults = @{ unit = 'percentunit'; decimals = 2; min = 0.5; max = 1 }; overrides = @() } }),
+  (Panel 'gauge' 'Latency error budget remaining (95% SLO)' 18 0 6 5 @(Target "1 - (($budgetLatency) / 0.05)" 'budget') 'percentunit' @{ fieldConfig = @{ defaults = @{ unit = 'percentunit'; min = 0; max = 1; thresholds = $budgetSteps }; overrides = @() } }),
+  (Panel 'timeseries' 'Availability burn rate (alerts: 14.4 fast, 6 slow)' 0 5 12 9 @(
+      (Target 'slo:demo_api_availability_burn_rate:rate1m' '1m'),
+      (Target 'slo:demo_api_availability_burn_rate:rate5m' '5m'),
+      (Target 'slo:demo_api_availability_burn_rate:rate30m' '30m')) 'short' $burnOpts),
+  (Panel 'timeseries' 'Latency burn rate (alerts: 14.4 fast, 6 slow)' 12 5 12 9 @(
+      (Target 'slo:demo_api_latency_burn_rate:rate1m' '1m'),
+      (Target 'slo:demo_api_latency_burn_rate:rate5m' '5m'),
+      (Target 'slo:demo_api_latency_burn_rate:rate30m' '30m')) 'short' $burnOpts),
+  (Panel 'timeseries' 'Error ratio vs the 1% budget' 0 14 12 8 @(
+      (Target 'slo:demo_api_error_ratio:rate1m' '5xx ratio (1m)'),
+      (Target 'vector(0.01)' 'budget (1%)')) 'percentunit'),
+  (Panel 'timeseries' 'Requests slower than 500 ms vs the 5% budget' 12 14 12 8 @(
+      (Target 'slo:demo_api_slow_ratio:rate1m' 'slow ratio (1m)'),
+      (Target 'vector(0.05)' 'budget (5%)')) 'percentunit'),
+  (Panel 'table' 'Alerts (pending and firing)' 0 22 24 7 @(@{ datasource = $prom; expr = 'ALERTS{alertstate=~"pending|firing",service_name!=""} or ALERTS{alertstate=~"pending|firing"}'; instant = $true; format = 'table'; refId = 'A' }) 'short' @{ transformations = @(@{ id = 'organize'; options = @{ excludeByName = @{ Time = $true; Value = $true; __name__ = $true } } }) })
+)
+Save (Dashboard 'demo-api-slo' 'SLO and burn rate: demo-api' @('observatory','slo') $slo @() '5s' 'now-30m') 'dashboards/slo-burn-rate.json'
 'done'

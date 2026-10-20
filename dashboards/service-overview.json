@@ -412,6 +412,80 @@
                        "id":  11,
                        "gridPos":  {
                                        "y":  30,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  0
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Database pool: connections in use (max 3)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "in use",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "max(demo_db_pool_in_use{service_name=\"demo-api\"})",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "ops"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  12,
+                       "gridPos":  {
+                                       "y":  30,
+                                       "w":  12,
+                                       "h":  7,
+                                       "x":  12
+                                   },
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "title":  "Database pool: timeouts / s (HTTP 503)",
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "timeouts",
+                                           "datasource":  {
+                                                              "type":  "prometheus",
+                                                              "uid":  "prometheus"
+                                                          },
+                                           "expr":  "sum(rate(demo_db_pool_timeouts_total{service_name=\"demo-api\"}[1m]))",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "type":  "timeseries",
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "fieldConfig":  {
+                                           "defaults":  {
+                                                            "unit":  "short"
+                                                        },
+                                           "overrides":  [
+
+                                                         ]
+                                       },
+                       "id":  13,
+                       "gridPos":  {
+                                       "y":  37,
                                        "w":  24,
                                        "h":  9,
                                        "x":  0
